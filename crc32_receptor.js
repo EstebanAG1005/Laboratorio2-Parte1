@@ -19,11 +19,14 @@ fs.readFile('output.txt', 'utf8', function(err, dataWithCRC) {
 
   var calculatedCRC = generateCRC(data);
 
+  console.log("Trama recibida: " + dataWithCRC);
+
   if (sentCRC === calculatedCRC) {
-    console.log("La data fue recibida correctamente.");
+    console.log("No se detectaron errores.");
     console.log("El mensaje decodificado es: " + binaryToString(data));
   } else {
     let error = (parseInt(sentCRC, 16) ^ parseInt(calculatedCRC, 16)).toString(16);
     console.log("Se detectó un error en la data recibida. Error: " + error);
+    console.log("La trama se descarta por detectar errores.");
   }
 });
