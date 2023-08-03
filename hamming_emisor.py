@@ -19,3 +19,7 @@ data = [int(b) for b in data]
 codeword = hammingCodificar(data)
 codeword_str = "".join(map(str, codeword))
 print("Codeword Hamming:", codeword_str)
+
+# Escribir el mensaje codificado en el archivo output2.txt
+with open('output2.txt', 'w') as file:
+    file.write(codeword_str)
