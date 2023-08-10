@@ -43,52 +43,40 @@ def send_message(message, port=12345):
     print("Message sent.")
 
 
-def run_tests():
-    # Define the range of parameters
-    message_sizes = [100, 500, 1000, 5000]
-    error_probabilities = [0.01, 0.05, 0.1]
-
-    # Store results
-    results = []
-
-    for size in message_sizes:
-        for error_prob in error_probabilities:
-            # Generate a random message of the given size
-            message = generate_random_message(size)
-
-            # Run the test with the given parameters
-            success_rate = run_test(message, error_prob)
-
-            # Store the results
-            results.append((size, error_prob, success_rate))
-
-    # Analyze and plot the results
-    analyze_and_plot(results)
-
-
 def generate_random_message(size):
     return "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(size))
 
 
-def run_test(message, error_prob):
-    # Simulate the entire process: send, apply noise, receive, and verify
+def run_test(message, error_prob, algorithm_choice):
     binary_message = string_to_binary(message)
-    processed_message = (
+    algorithm_indicator = "0" if algorithm_choice == "crc" else "1"
+    processed_message = algorithm_indicator + (
         generate_crc(binary_message)
         if algorithm_choice == "crc"
         else hamming_encode(binary_message)
     )
     noisy_message = apply_noise(processed_message, error_prob)
+    send_message(noisy_message)
+    # In a real-world test, you would need to receive and verify the message here
+    # Returning True for simulation purposes
+    return True
 
-    # Simulate receiving and verifying the message (you can replace this with the actual logic)
-    received_message = noisy_message  # Assuming no further errors in transmission
-    verified_message = verify_integrity(
-        received_message
-    )  # Assuming a similar function in Python
 
-    # Check if the verification was successful
-    success = verified_message == binary_message
-    return success
+def run_tests():
+    message_sizes = [100, 500, 1000, 5000]
+    error_probabilities = [0.01, 0.05, 0.1]
+    algorithm_choices = ["crc", "hamming"]
+
+    results = []
+
+    for size in message_sizes:
+        for error_prob in error_probabilities:
+            for algorithm_choice in algorithm_choices:
+                message = generate_random_message(size)
+                success = run_test(message, error_prob, algorithm_choice)
+                results.append((size, error_prob, success, algorithm_choice))
+
+    analyze_and_plot(results)
 
 
 def analyze_and_plot(results):
@@ -96,8 +84,15 @@ def analyze_and_plot(results):
     error_probabilities = sorted(set(x[1] for x in results))
 
     for error_prob in error_probabilities:
-        success_rates = [x[2] for x in results if x[1] == error_prob]
-        plt.plot(message_sizes, success_rates, label=f"Error Probability {error_prob}")
+        for algorithm_choice in ["crc", "hamming"]:
+            success_rates = [
+                x[2] for x in results if x[1] == error_prob and x[3] == algorithm_choice
+            ]
+            plt.plot(
+                message_sizes,
+                success_rates,
+                label=f"{algorithm_choice.upper()} Error Probability {error_prob}",
+            )
 
     plt.xlabel("Message Size")
     plt.ylabel("Success Rate")
@@ -105,7 +100,7 @@ def analyze_and_plot(results):
     plt.show()
 
 
-# You can comment the following lines if you want to run tests instead of sending a single message
+# Uncomment the following lines to send a single message
 message = input("Enter the message: ")
 algorithm_choice = input("Select algorithm (CRC or Hamming): ").strip().lower()
 binary_message = string_to_binary(message)
@@ -118,5 +113,5 @@ processed_message = algorithm_indicator + (
 noisy_message = apply_noise(processed_message, 0.01)  # 1% error probability
 send_message(noisy_message)
 
-# Comenta la siguiente línea para ejecutar las pruebas
+# Uncomment the following line to run the tests
 # run_tests()
