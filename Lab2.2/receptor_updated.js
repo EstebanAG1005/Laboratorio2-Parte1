@@ -71,9 +71,11 @@ const server = net.createServer((socket) => {
             const decodedMessage = binaryToString(verifiedMessage);
             console.log('Received binary message:', binaryMessage);
             console.log('Decoded message:', decodedMessage);
+            socket.write("success"); // Sending success response
         } else {
             console.log('Received binary message:', binaryMessage);
             console.log('Verification failed. Message not decoded.');
+            socket.write("failure"); // Sending failure response
         }
     });
     
