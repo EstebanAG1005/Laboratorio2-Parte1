@@ -55,7 +55,7 @@ def run_test(message, error_prob, algorithm_choice):
         if algorithm_choice == "crc"
         else hamming_encode(binary_message)
     )
-    # noisy_message = apply_noise(processed_message, error_prob)
+    noisy_message = apply_noise(processed_message, error_prob)
     send_message(processed_message)
     # In a real-world test, you would need to receive and verify the message here
     # Returning True for simulation purposes
