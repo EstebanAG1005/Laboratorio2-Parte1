@@ -1,7 +1,4 @@
 const net = require('net');
-const zlib = require('zlib');
-const crc = require('crc');
-
 
 function binaryToString(binary) {
     let str = '';
@@ -33,52 +30,25 @@ function hamming_decode(binaryMessage) {
     return decodedMessage;
 }
 
-function compute_crc(binaryMessage) {
-    return crc.crc32(binaryMessage).toString(2).padStart(32, '0');
-}
-
-function verify_integrity(binaryMessage) {
-    const algorithmIndicator = binaryMessage[0];
-    const data = binaryMessage.slice(1);
-
-    if (algorithmIndicator === '0') {
-        const received_crc = data.slice(-32);
-        const message_data = data.slice(0, -32);
-        const computed_crc = compute_crc(message_data);
-
-        if (received_crc === computed_crc) {
-            return message_data;
-    } else {
-            console.error("CRC verification failed!");
-            return null;
-        }
-    } else if (algorithmIndicator === '1') {
-        return hamming_decode(data);
-    } else {
-        console.error("Invalid algorithm indicator!");
-        return null;
-    }
-}
-
 const server = net.createServer((socket) => {
     console.log('Client connected');
 
     socket.on('data', (data) => {
         const binaryMessage = data.toString();
-        const verifiedMessage = verify_integrity(binaryMessage);
+        const verifiedMessage = hamming_decode(binaryMessage);
     
         if (verifiedMessage !== null) {
             const decodedMessage = binaryToString(verifiedMessage);
-            console.log('Received binary message:', binaryMessage);
-            console.log('Decoded message:', decodedMessage);
+            console.log('Mensaje binario recibido:', binaryMessage);
+            console.log('Mensaje decodificado:', decodedMessage);
         } else {
-            console.log('Received binary message:', binaryMessage);
-            console.log('Verification failed. Message not decoded.');
+            console.log('Mensaje binario recibido:', binaryMessage);
+            console.log('Verificacion fallida. Mensaje no decodificado.');
         }
     });
     
 });
 
 server.listen(12345, () => {
-    console.log('Server is listening on port 12345...');
+    console.log('El servidor esta escuchando el puerto: 12345...');
 });

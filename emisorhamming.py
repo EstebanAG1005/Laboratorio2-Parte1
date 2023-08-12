@@ -1,6 +1,5 @@
 import socket
 import random
-import zlib
 import matplotlib.pyplot as plt
 
 
@@ -13,14 +12,6 @@ def apply_noise(binary_data, error_probability):
         bit if random.random() > error_probability else ("1" if bit == "0" else "0")
         for bit in binary_data
     )
-
-
-def generate_crc(binary_message):
-    byte_message = int(binary_message, 2).to_bytes(
-        (len(binary_message) + 7) // 8, byteorder="big"
-    )
-    crc = zlib.crc32(byte_message)
-    return format(crc, "032b")
 
 
 def hamming_encode(binary_message):
@@ -40,23 +31,18 @@ def send_message(message, port=12345):
     s.connect(("127.0.0.1", port))
     s.sendall(message.encode("utf-8"))
     s.close()
-    print("Message sent.")
+    print("Mensaje Enviado.")
 
 
 def generate_random_message(size):
     return "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(size))
 
 
-def run_test(message, error_prob, algorithm_choice):
+def run_test(message, error_prob):
     binary_message = string_to_binary(message)
-    algorithm_indicator = "0" if algorithm_choice == "crc" else "1"
-    processed_message = algorithm_indicator + (
-        generate_crc(binary_message)
-        if algorithm_choice == "crc"
-        else hamming_encode(binary_message)
-    )
+    processed_message = hamming_encode(binary_message)
     noisy_message = apply_noise(processed_message, error_prob)
-    send_message(noisy_message)
+    send_message(processed_message)
     # In a real-world test, you would need to receive and verify the message here
     # Returning True for simulation purposes
     return True
@@ -65,16 +51,14 @@ def run_test(message, error_prob, algorithm_choice):
 def run_tests():
     message_sizes = [100, 500, 1000, 5000]
     error_probabilities = [0.01, 0.05, 0.1]
-    algorithm_choices = ["crc", "hamming"]
 
     results = []
 
     for size in message_sizes:
         for error_prob in error_probabilities:
-            for algorithm_choice in algorithm_choices:
-                message = generate_random_message(size)
-                success = run_test(message, error_prob, algorithm_choice)
-                results.append((size, error_prob, success, algorithm_choice))
+            message = generate_random_message(size)
+            success = run_test(message, error_prob)
+            results.append((size, error_prob, success, "hamming"))
 
     analyze_and_plot(results)
 
@@ -84,34 +68,26 @@ def analyze_and_plot(results):
     error_probabilities = sorted(set(x[1] for x in results))
 
     for error_prob in error_probabilities:
-        for algorithm_choice in ["crc", "hamming"]:
-            success_rates = [
-                x[2] for x in results if x[1] == error_prob and x[3] == algorithm_choice
-            ]
-            plt.plot(
-                message_sizes,
-                success_rates,
-                label=f"{algorithm_choice.upper()} Error Probability {error_prob}",
-            )
+        success_rates = [
+            x[2] for x in results if x[1] == error_prob and x[3] == "hamming"
+        ]
+        plt.plot(
+            message_sizes,
+            success_rates,
+            label=f"HAMMING Probabilidad de Error {error_prob}",
+        )
 
-    plt.xlabel("Message Size")
-    plt.ylabel("Success Rate")
+    plt.xlabel("Tamaño de mensaje")
+    plt.ylabel("Taza de exito")
     plt.legend()
     plt.show()
 
 
-# Uncomment the following lines to send a single message
-message = input("Enter the message: ")
-algorithm_choice = input("Select algorithm (CRC or Hamming): ").strip().lower()
+message = input("Ingresa el mensaje: ")
 binary_message = string_to_binary(message)
-algorithm_indicator = "0" if algorithm_choice == "crc" else "1"
-processed_message = algorithm_indicator + (
-    generate_crc(binary_message)
-    if algorithm_choice == "crc"
-    else hamming_encode(binary_message)
-)
+processed_message = hamming_encode(binary_message)
 noisy_message = apply_noise(processed_message, 0.01)  # 1% error probability
-send_message(noisy_message)
+send_message(processed_message)
 
 # Uncomment the following line to run the tests
 # run_tests()
