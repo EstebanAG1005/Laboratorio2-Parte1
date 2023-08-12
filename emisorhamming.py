@@ -88,6 +88,3 @@ binary_message = string_to_binary(message)
 processed_message = hamming_encode(binary_message)
 noisy_message = apply_noise(processed_message, 0.01)  # 1% error probability
 send_message(processed_message)
-
-# Uncomment the following line to run the tests
-# run_tests()
