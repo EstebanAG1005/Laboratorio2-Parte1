@@ -16,7 +16,23 @@ def string_to_binary(input_string):
     return "".join(format(ord(char), "08b") for char in input_string)
 
 
-def run_test(message_length, number_of_tests):
+def add_noise(binary_data, probability):
+    """
+    Agrega ruido al mensaje binario cambiando bits aleatorios
+    basado en la probabilidad especificada.
+    """
+    noisy_data = []
+    for bit in binary_data:
+        if random.random() < probability:
+            # Invierte el bit
+            noisy_data.append("0" if bit == "1" else "1")
+        else:
+            noisy_data.append(bit)
+
+    return "".join(noisy_data)
+
+
+def run_test(message_length, number_of_tests, noise_probability=0.01):
     success_count = 0
 
     for _ in range(number_of_tests):
@@ -25,7 +41,8 @@ def run_test(message_length, number_of_tests):
             for _ in range(message_length)
         )
         binary_data = string_to_binary(test_string)
-        crc_data = binary_data + generate_crc(
+        noisy_binary_data = add_noise(binary_data, noise_probability)
+        crc_data = noisy_binary_data + generate_crc(
             binary_data
         )  # Combina los datos en binario con el CRC
 
@@ -52,11 +69,13 @@ def manual_mode():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         s.sendall(crc_data.encode())
+        response = s.recv(1024)  # Espera una respuesta del servidor
+        print(f"Response from server: {response.decode()}")
 
 
 def automated_tests():
     test_lengths = [10, 50, 100, 500, 1000]
-    number_of_tests = 10000
+    number_of_tests = 100
     success_rates = []
 
     for length in test_lengths:

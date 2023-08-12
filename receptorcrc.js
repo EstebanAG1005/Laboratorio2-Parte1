@@ -8,8 +8,14 @@ function generateCRC(data) {
 }
 
 function binaryToString(str) {
-    return str.split(/\s/).map((bin) => String.fromCharCode(parseInt(bin, 2))).join('');
+    let result = "";
+    for (let i = 0; i < str.length; i += 8) {
+        const byte = str.slice(i, i + 8);
+        result += String.fromCharCode(parseInt(byte, 2));
+    }
+    return result;
 }
+
 
 const server = net.createServer((socket) => {
     socket.on('data', (dataWithCRC) => {
@@ -34,6 +40,14 @@ const server = net.createServer((socket) => {
         }
 
         socket.end();
+    });
+
+    socket.on('error', (error) => {
+        if (error.code === 'ECONNRESET') {
+            console.log('Client closed connection');
+        } else {
+            console.error('Unexpected error:', error);
+        }
     });
 });
 
